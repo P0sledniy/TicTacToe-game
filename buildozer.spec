@@ -12,4 +12,8 @@ android.permissions = INTERNET
 android.api = 33
 android.minapi = 21
 android.sdk = 33
-android.nd
+android.ndk = 25c
+android.accept_sdk_license = True
+
+[buildozer]
+log_level = 2
