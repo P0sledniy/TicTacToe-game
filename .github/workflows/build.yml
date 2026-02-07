@@ -30,7 +30,7 @@ jobs:
       - name: 🏗️ Build APK (This will take 30-60 minutes)
         run: |
           # Ответим 'y' на все вопросы лицензии и запустим сборку
-          yes | buildozer android debug 2>&1 | tail -n 100
+          yes | buildozer android debug 2>&1 |
 
       - name: 📤 Upload APK Artifact
         if: success()
