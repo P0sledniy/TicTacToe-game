@@ -4,6 +4,8 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90  # Даем больше времени на долгую сборку
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -17,8 +19,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq \
-            python3-pip python3-dev \
-            git unzip wget \
+            python3-pip python3-dev git unzip wget \
             openjdk-11-jdk-headless \
             build-essential libffi-dev libssl-dev
 
@@ -29,8 +30,8 @@ jobs:
 
       - name: 🏗️ Build APK (This will take 30-60 minutes)
         run: |
-          # Ответим 'y' на все вопросы лицензии и запустим сборку
-          yes | buildozer android debug 2>&1 |
+          # Просто запускаем сборку без лишних команд
+          yes | buildozer --verbose android debug
 
       - name: 📤 Upload APK Artifact
         if: success()
