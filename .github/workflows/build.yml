@@ -3,42 +3,40 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # ЯВНО УКАЗЫВАЕМ СТАРУЮ ВЕРСИЮ UBUNTU!
     timeout-minutes: 120
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
+      - name: 🐍 Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.9'  # Python 3.9 стабильнее для сборки
 
-      - name: ⚙️ Install System Dependencies
+      - name: ⚙️ Install OLD System Dependencies
         run: |
           sudo apt-get update -qq
+          # Устанавливаем КОНКРЕТНЫЕ СТАРЫЕ версии
           sudo apt-get install -y -qq \
             python3-pip python3-dev git unzip wget \
-            openjdk-11-jdk-headless \
+            openjdk-8-jdk-headless \
             build-essential libffi-dev libssl-dev \
-            autoconf automake libtool pkg-config
+            autoconf=2.69* automake=1.16* libtool=2.4* pkg-config
 
       - name: 📦 Install Buildozer & Cython
         run: |
-          pip3 install --upgrade pip wheel setuptools
+          pip3 install --upgrade "pip<24.0" wheel setuptools
           pip3 install buildozer cython==0.29.33
-
-      # КРИТИЧЕСКИ ВАЖНО: Обход ошибки libffi
-      - name: 🔧 Apply workaround for libffi build error
-        run: |
-          echo "FFI_CONFIGURE_BUILD_FROM_SOURCE=false" >> $GITHUB_ENV
-          echo "ACLOCAL_PATH=/usr/share/aclocal" >> $GITHUB_ENV
 
       - name: 🏗️ Build APK (Single arch - faster)
         run: |
-          # Собираем только для одной архитектуры для скорости
-          echo "y" | buildozer --verbose android debug 2>&1
+          # Критически важные переменные окружения
+          export FFI_CONFIGURE_BUILD_FROM_SOURCE=false
+          export ACLOCAL_PATH=/usr/share/aclocal
+          # Сборка только для ARM64
+          yes | buildozer android debug 2>&1 | tail -100
 
       - name: 📤 Upload APK Artifact
         if: success()
