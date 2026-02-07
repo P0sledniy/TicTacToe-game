@@ -1,39 +1,16 @@
 name: Build APK
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.9'
-        
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-pip python3-dev git unzip
-        pip3 install buildozer cython
-        
-    - name: Build APK with Buildozer
-      run: |
-        echo "y" | buildozer android debug
-        echo "y" | buildozer android release
-        
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v3
+    - name: Build with Buildozer
+      uses: ArtemSBulgakov/buildozer-action@v1.8.0
+    - uses: actions/upload-artifact@v3
       with:
-        name: tictactoe-apk
-        path: |
-          bin/*debug*.apk
-          bin/*release*.apk
+        name: app-apk
+        path: bin/*.apk
