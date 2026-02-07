@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90  # Даем больше времени на долгую сборку
+    timeout-minutes: 120
 
     steps:
       - name: 📥 Checkout code
@@ -21,17 +21,24 @@ jobs:
           sudo apt-get install -y -qq \
             python3-pip python3-dev git unzip wget \
             openjdk-11-jdk-headless \
-            build-essential libffi-dev libssl-dev
+            build-essential libffi-dev libssl-dev \
+            autoconf automake libtool pkg-config
 
       - name: 📦 Install Buildozer & Cython
         run: |
           pip3 install --upgrade pip wheel setuptools
           pip3 install buildozer cython==0.29.33
 
-      - name: 🏗️ Build APK (This will take 30-60 minutes)
+      # КРИТИЧЕСКИ ВАЖНО: Обход ошибки libffi
+      - name: 🔧 Apply workaround for libffi build error
         run: |
-          # Просто запускаем сборку без лишних команд
-          yes | buildozer --verbose android debug
+          echo "FFI_CONFIGURE_BUILD_FROM_SOURCE=false" >> $GITHUB_ENV
+          echo "ACLOCAL_PATH=/usr/share/aclocal" >> $GITHUB_ENV
+
+      - name: 🏗️ Build APK (Single arch - faster)
+        run: |
+          # Собираем только для одной архитектуры для скорости
+          echo "y" | buildozer --verbose android debug 2>&1
 
       - name: 📤 Upload APK Artifact
         if: success()
@@ -39,4 +46,3 @@ jobs:
         with:
           name: tictactoe-apk
           path: bin/*.apk
-          retention-days: 7
